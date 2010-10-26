@@ -15,10 +15,15 @@ httpProxy.createServer(function (req, res, proxyRequest) {
      proxyRequest(5984, '192.168.1.100');
   } else {
     db.getDoc(id, function(er, doc) {
-      var attach = doc._attachments;
-      for(var k in attach) {}
+      if (er) {
+        console.log(er);
+      } else {
+        var attach = doc._attachments;
+        for(var k in attach) {}
 
-      req.url = '/rocks_file_store_dev/' + id + '/' + k;
+        req.url = '/rocks_file_store_dev/' + id + '/' + k;
+      }
+
       proxyRequest(5984, '192.168.1.100');
 
       //db.getAttachment(doc._id, attachmentId, function(er, data) {
