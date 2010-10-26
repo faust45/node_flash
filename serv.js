@@ -3,9 +3,10 @@ var http = require('http'),
     url = require('url');
 
 var sys = require('sys'),
+    dbName = 'rocks_file_store',
     couchdb = require('couchdb'),
     client = couchdb.createClient(5984, '192.168.1.100'),
-    db = client.db('rocks_file_store_dev');
+    db = client.db(dbName);
 
 httpProxy.createServer(function (req, res, proxyRequest) {
   var path = url.parse(req.url),
@@ -21,7 +22,7 @@ httpProxy.createServer(function (req, res, proxyRequest) {
         var attach = doc._attachments;
         for(var k in attach) {}
 
-        req.url = '/rocks_file_store_dev/' + id + '/' + k;
+        req.url = '/' + dbName + '/' + id + '/' + k;
       }
 
       proxyRequest(5984, '192.168.1.100');
