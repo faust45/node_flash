@@ -11,20 +11,21 @@ httpProxy.createServer(function (req, res, proxyRequest) {
   var path = url.parse(req.url),
       id = path.pathname.replace('/', '');
 
-  console.log(req.url)
-  console.log(id)
-  db.getDoc(id, function(er, doc) {
-    var attach = doc._attachments;
-    for(var k in attach) {}
-    console.log(k);
+  if (id == 'favicon.ico') {
+     proxyRequest(5984, '192.168.1.100');
+  } else {
+    db.getDoc(id, function(er, doc) {
+      var attach = doc._attachments;
+      for(var k in attach) {}
 
-    req.url = '/rocks_file_store_dev/' + id + '/' + k;
-    proxyRequest(5984, '192.168.1.100');
+      req.url = '/rocks_file_store_dev/' + id + '/' + k;
+      proxyRequest(5984, '192.168.1.100');
 
-    //db.getAttachment(doc._id, attachmentId, function(er, data) {
-    //  console.log(doc);
-    //});
-  });
+      //db.getAttachment(doc._id, attachmentId, function(er, data) {
+      //  console.log(doc);
+      //});
+    });
+  }
 }).listen(8000);
 
 
