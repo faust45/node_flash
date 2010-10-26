@@ -14,24 +14,27 @@ httpProxy.createServer(function (req, res, proxyRequest) {
 
   if (id == 'favicon.ico') {
      proxyRequest(5984, '192.168.1.100');
-  } else {
-    db.getDoc(id, function(er, doc) {
-      if (er) {
-        console.log(er);
-      } else {
-        var attach = doc._attachments;
-        for(var k in attach) {}
+     return;
+  } 
 
-        req.url = '/' + dbName + '/' + id + '/' + k;
-      }
+  console.log('request doc: ' + id);
+  db.getDoc(id, function(er, doc) {
+    if (er) {
+      console.log(er);
+    } else {
+      console.log('got doc: ' + doc._id);
+      var attach = doc._attachments;
+      for(var k in attach) {}
 
-      proxyRequest(5984, '192.168.1.100');
+      req.url = '/' + dbName + '/' + id + '/' + k;
+    }
 
-      //db.getAttachment(doc._id, attachmentId, function(er, data) {
-      //  console.log(doc);
-      //});
-    });
-  }
+    proxyRequest(5984, '192.168.1.100');
+
+    //db.getAttachment(doc._id, attachmentId, function(er, data) {
+    //  console.log(doc);
+    //});
+  });
 }).listen(8000);
 
 
