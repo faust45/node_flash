@@ -9,6 +9,7 @@ var sys = require('sys'),
     db = client.db(dbName);
 
 httpProxy.createServer(function (req, res, proxyRequest) {
+  console.log('come in proxy');
   var path = url.parse(req.url),
       id = path.pathname.replace('/', '');
 
@@ -32,13 +33,15 @@ httpProxy.createServer(function (req, res, proxyRequest) {
     console.log(req.url);
     proxyRequest(5984, '192.168.1.100');
 
-    //db.getAttachment(doc._id, attachmentId, function(er, data) {
-    //  console.log(doc);
-    //});
   });
+
+  return;
 }).listen(8000);
 
 
+    //db.getAttachment(doc._id, attachmentId, function(er, data) {
+    //  console.log(doc);
+    //});
 /*
   http.createServer(function (req, res) {
   res.writeHead(200, {'Content-Type': 'text/plain'});
