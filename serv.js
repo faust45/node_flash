@@ -29,6 +29,7 @@ httpProxy.createServer(function (req, res, proxyRequest) {
       req.url = '/' + dbName + '/' + id + '/' + k;
     }
 
+    console.log(req.url);
     proxyRequest(5984, '192.168.1.100');
 
     //db.getAttachment(doc._id, attachmentId, function(er, data) {
