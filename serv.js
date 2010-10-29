@@ -12,7 +12,7 @@ httpProxy.createServer(function (req, res, proxy) {
   var path = url.parse(req.url),
       id = path.pathname.replace('/', '');
       params = qs.parse(path.query),
-      size = parseSize(params.size) || defaultSize;
+      size = parseSize(params.size);
 
   if (id == 'favicon.ico') {
     return;
