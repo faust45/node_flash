@@ -1,11 +1,14 @@
-var gm = require('gm'),
-    fs = require('fs'),
+var fs = require('fs'),
     dbName = 'test',
     couchdb = require('couchdb'),
     client = couchdb.createClient(5984, '192.168.1.100'),
-    db = client.db(dbName);
+    db = client.db(dbName),
+    exec = require('child_process').exec;
 
 
+function p() {
+  console.log(arguments);
+}
 
 /*
 */
@@ -21,9 +24,4 @@ db.getAttachment(id, attachmentId, function(er, data) {
 });
 */
 
-gm('test.jpg')
-  .resize(240, 240)
-  .write('resize.png', function(err) {
-    console.log(err);
-    if (!err) print('done');
-  });
+child = exec("./rounded_corners.sh " + 'resize.png r.png');
