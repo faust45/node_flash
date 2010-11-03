@@ -19,12 +19,9 @@ httpProxy.createServer(function (req, res, proxy) {
   } 
 
   myCouch.downloadAttachment(id, {}, function(er, filePath) {
-    p('download complete');
-    p(filePath);
-
     var processor = imgs.process(filePath, {size: size});
+
     processor.on('finish', function(filePath, fileName) {
-      p('finish');
       res.writeHead(200, {
         'Content-Type': utils.mime.type(fileName)
       });

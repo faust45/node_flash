@@ -1,7 +1,7 @@
 var couchdb = require('couchdb'),
     http = require('http'),
     fs = require('fs'),
-    dbName = 'test',
+    dbName = 'rocks_dev',
     dbClient = http.createClient(5984, '192.168.1.100');
     couch = couchdb.createClient(5984, '192.168.1.100').db(dbName);
 
