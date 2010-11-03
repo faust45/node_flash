@@ -24,6 +24,7 @@ function ImgProcessor(filePath, options) {
            self.emit('finish', finishFile, newFile);
          }); 
        } else {
+         self.emit('error', err);
          console.log(err);
        }
     });

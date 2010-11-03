@@ -1,39 +1,46 @@
 var couchdb = require('couchdb'),
     http = require('http'),
     fs = require('fs'),
-    dbName = 'rocks_dev',
+    dbName = 'rocks_file_store_dev',
     dbClient = http.createClient(5984, '192.168.1.100');
     couch = couchdb.createClient(5984, '192.168.1.100').db(dbName);
 
 exports.downloadAttachment = function(docID, options, cb) {
   options = options || {};
 
-  getAttachmentName(docID, function(fileName) {
-    var filePath = './tmp/' + fileName
-    var fileStream = fs.createWriteStream(filePath, {'encoding': 'binary'});
-    var path = '/' + dbName + '/' + docID + '/' + fileName;
-    var request = dbClient.request('GET', path);
+  getAttachmentName(docID, function(er, fileName) {
+    if (!er) {
+      var filePath = './tmp/' + fileName;
+      var fileStream = fs.createWriteStream(filePath, {'encoding': 'binary'});
+      var path = '/' + dbName + '/' + docID + '/' + fileName;
+      var request = dbClient.request('GET', path);
 
-    request.end();
-    request.on('response', function (response) {
-      response.setEncoding('binary');
+      request.end();
+      request.on('response', function (response) {
+        response.setEncoding('binary');
 
-      response.on('data', function (chunk) {
-        fileStream.write(chunk, 'binary');
+        response.on('data', function (chunk) {
+          fileStream.write(chunk, 'binary');
+        });
+        response.on('end', function() {
+          fileStream.end();
+          return cb && cb(null, filePath);
+        });
       });
-      response.on('end', function () {
-        fileStream.end();
-        return cb && cb(null, filePath);
-      });
-    });
+    } else {
+      return cb && cb(er, null);
+    }
   });
 }
 
 function getAttachmentName(docID, cb) {
   couch.getDoc(docID, function(er, doc) {
-    for(var fileName in doc._attachments) {}
-
-    return cb(fileName);
+    if (!er) {
+      for(var fileName in doc._attachments) {}
+      return cb(null, fileName);
+    } else {
+      return cb(er, null);
+    }
   });
 }
 
