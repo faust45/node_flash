@@ -3,10 +3,10 @@ var http = require('http'),
     url = require('url'),
     fs = require('fs'),
     sys = require('util'),
-    utils = require('connect/utils'),
     imgs = require('./imgs'),
     myCouch = require('./my_couch'),
-    qs = require('querystring');
+    qs = require('querystring'),
+    cache = require('./cache');
 
 var ip = '127.0.0.1', port = 8000;
 
@@ -14,36 +14,42 @@ httpProxy.createServer(function (req, res, proxy) {
   var path = url.parse(req.url),
       id   = path.pathname.replace('/', ''),
       params = qs.parse(path.query),
-      size   = parseSize(params.size);
+      size   = parseSize(params.size) || {width: 100, height: 100},
+      roundCorners = params.round;
 
   if (id == 'favicon.ico' || id == '') {
     return;
   } 
 
-  myCouch.downloadAttachment(id, {}, function(er, filePath) {
-    var processor = imgs.process(filePath, {size: size});
+  var box = cache.check(id, size, roundCorners);
 
+  box.on('hit', function(cacheUrl) {
+    req.url = cacheUrl;
+    proxy.proxyRequest(5984, '192.168.1.100',  req, res);
+  });
 
-    processor.on('error', function(er) {
-      res.end();
-    });
-    processor.on('finish', function(filePath, fileName) {
-      res.writeHead(200, {
-        'Content-Type': utils.mime.type(fileName)
-      });
-      var readStream = fs.createReadStream(filePath, {'encoding': 'binary'});
+  box.on('fail', function() {
+    myCouch.downloadAttachment(id, {}, function(er, filePath) {
+      var processor = imgs.process(filePath, {size: size, round: roundCorners});
 
-      readStream.on('data', function (chunk) {
-        res.write(chunk, 'binary');
-      });
-      readStream.on('end', function () {
+      processor.on('error', function(er) {
         res.end();
+      });
+      processor.on('finish', function(filePath, mime) {
+        res.writeHead(200, { 'Content-Type': mime });
+
+        var readStream = fs.createReadStream(filePath, { 'encoding': 'binary' });
+        box.put(readStream, mime); 
+
+        readStream.on('data', function (chunk) {
+          res.write(chunk, 'binary');
+        });
+        readStream.on('end', function () {
+          res.end();
+        });
       });
     });
   });
-
-  //req.url = '/' + 'cache' + '/' + id + '/' + fileName;
-  //proxy.proxyRequest(5984, '192.168.1.100',  req, res);
 }).listen(port, ip);
 console.log('Server running at ' + ip + ':' + port);
 

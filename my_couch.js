@@ -1,6 +1,7 @@
 var couchdb = require('couchdb'),
     http = require('http'),
     fs = require('fs'),
+    temp = require('temp'),
     dbName = 'rocks_file_store_dev',
     dbClient = http.createClient(5984, '192.168.1.100');
     couch = couchdb.createClient(5984, '192.168.1.100').db(dbName);
@@ -10,7 +11,7 @@ exports.downloadAttachment = function(docID, options, cb) {
 
   getAttachmentName(docID, function(er, fileName) {
     if (!er) {
-      var filePath = './tmp/' + fileName;
+      var filePath = temp.path();
       var fileStream = fs.createWriteStream(filePath, {'encoding': 'binary'});
       var path = '/' + dbName + '/' + docID + '/' + fileName;
       var request = dbClient.request('GET', path);
