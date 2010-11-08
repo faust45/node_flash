@@ -3,8 +3,14 @@ var couchdb = require('couchdb'),
     fs = require('fs'),
     temp = require('temp'),
     dbName = 'rocks_file_store_dev',
-    dbClient = http.createClient(5984, '192.168.1.100');
+    EventEmitter = require('events').EventEmitter,
+    dbClient = http.createClient(5984, '192.168.1.100'),
     couch = couchdb.createClient(5984, '192.168.1.100').db(dbName);
+
+
+exports.listenChanges = function(filter) {
+    return new CouchFeed(filter);
+}
 
 exports.downloadAttachment = function(docID, options, cb) {
   options = options || {};
@@ -84,3 +90,10 @@ function getDoc(docID, options, cb) {
 }
 
 
+
+CouchFeed = function(filter) {
+  
+}
+
+
+CouchFeed.prototype.__proto__ = EventEmitter.prototype;

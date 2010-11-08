@@ -33,13 +33,13 @@ httpProxy.createServer(function (req, res, proxy) {
       var processor = imgs.process(filePath, {size: size, round: roundCorners});
 
       processor.on('error', function(er) {
-        res.end();
+        res.writeHead(404, {'Content-Type': 'text/plain'});
+        res.end('Image not found');
       });
       processor.on('finish', function(filePath, mime) {
         res.writeHead(200, { 'Content-Type': mime });
 
         var readStream = fs.createReadStream(filePath, { 'encoding': 'binary' });
-        box.put(readStream, mime); 
 
         readStream.on('data', function (chunk) {
           res.write(chunk, 'binary');
@@ -47,6 +47,8 @@ httpProxy.createServer(function (req, res, proxy) {
         readStream.on('end', function () {
           res.end();
         });
+
+        box.put(readStream, mime); 
       });
     });
   });
