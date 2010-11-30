@@ -17,17 +17,30 @@ exports.downloadAttachment = function(docID, options, cb) {
 
   getAttachmentName(docID, function(er, fileName) {
     if (!er) {
+      console.log('start download...');
+
       var filePath = temp.path();
       var fileStream = fs.createWriteStream(filePath, {'encoding': 'binary'});
       var path = '/' + dbName + '/' + docID + '/' + fileName;
+      var dbClient = http.createClient(5984, '192.168.1.100');
       var request = dbClient.request('GET', path);
-
+      var countLength = 0;
       request.end();
+
       request.on('response', function (response) {
         response.setEncoding('binary');
 
         response.on('data', function (chunk) {
           fileStream.write(chunk, 'binary');
+          countLength = countLength + chunk.length;
+          console.log('data come');
+
+          if (options.limiSize) {
+            if (options.limiSize <= countLength) {
+              response.emit('end');
+              response.destroy();
+            }
+          }
         });
         response.on('end', function() {
           fileStream.end();
@@ -92,7 +105,55 @@ function getDoc(docID, options, cb) {
 
 
 CouchFeed = function(filter) {
-  
+  var self = this;
+
+  couch.info(function(err, info) {
+    runRequest({since: info.update_seq});
+  })
+
+  function runRequest(options) {
+      options = options || {}
+      var query = {
+          feed: 'continuous',
+          filter: 'global/' + filter,
+          since:  options.since,
+          heartbeat: 1 * 1000
+      };
+
+ 
+      var path = '/' + dbName + '/_changes?' + couchdb.toQuery(query);
+      var dbClient = http.createClient(5984, '192.168.1.100');
+      var request = dbClient.request('GET', path);
+
+      request.end();
+      request.on('response', function (response) {
+          var buffer = '';
+          response.setEncoding('utf8');
+
+          response.on('data', function (chunk) {
+              buffer += (chunk || '');
+
+              var offset, change;
+              while ((offset = buffer.indexOf("\n")) >= 0) {
+                  change = buffer.substr(0, offset);
+                  buffer = buffer.substr(offset +1);
+
+                  // Couch sends an empty line as the "heartbeat"
+                  if (change == '') {
+                      return self.emit('heartbeat');
+                  }
+
+                  try {
+                      change = JSON.parse(change);
+                  } catch (e) {
+                      return stream.emit('error', 'invalid json: '+change);
+                  }
+
+                  self.emit('data', change);
+              }
+          });
+      });
+  }
 }
 
 
