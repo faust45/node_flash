@@ -33,10 +33,9 @@ exports.downloadAttachment = function(docID, options, cb) {
         response.on('data', function (chunk) {
           fileStream.write(chunk, 'binary');
           countLength = countLength + chunk.length;
-          console.log('data come');
 
-          if (options.limiSize) {
-            if (options.limiSize <= countLength) {
+          if (options.limit) {
+            if (options.limit <= countLength) {
               response.emit('end');
               response.destroy();
             }
@@ -60,6 +59,43 @@ function getAttachmentName(docID, cb) {
       return cb(null, fileName);
     } else {
       return cb(er, null);
+    }
+  });
+}
+
+exports.downloadBuffer = function(docID, options, cb) {
+  options = options || {};
+  options.limit = options.limit || 2000;
+
+  getAttachmentName(docID, function(er, fileName) {
+    if (!er) {
+      console.log('start download...');
+
+      var path = '/' + dbName + '/' + docID + '/' + fileName;
+      var dbClient = http.createClient(5984, '192.168.1.100');
+      var request = dbClient.request('GET', path);
+      var buffer = new Buffer(options.limit, 'binary'), len = 0;
+
+      request.end();
+      request.on('response', function (response) {
+        response.setEncoding('binary');
+
+        response.on('data', function (chunk) {
+          len += buffer.write(chunk, len, 'binary');
+
+          if (options.limit) {
+            if (options.limit <= len) {
+              response.emit('end');
+              response.destroy();
+            }
+          }
+        });
+        response.on('end', function() {
+          return cb && cb(null, buffer);
+        });
+      });
+    } else {
+      return cb && cb(er, null);
     }
   });
 }
