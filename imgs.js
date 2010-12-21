@@ -19,27 +19,52 @@ function ImgProcessor(filePath, options) {
   var newFile = temp.path({suffix: '.png'});
   var mime = utils.mime.type(newFile);
 
-  gm(filePath)
-   .resize(size.width, size.height)
-   .write(newFile, function(err) {
-       if(!err) {
-         if (roundCorners) { 
-           roundedCorners(newFile, function(finishFile) {
-             self.emit('finish', finishFile, mime);
-           }); 
-         } else {
-           self.emit('finish', newFile, mime);
-         }
-       } else {
-         self.emit('error', err);
-         console.log(err);
-       }
-    });
+  if (options.thumb) {
+      thumbs(size, filePath, newFile, function() {
+          if (roundCorners) { 
+              roundedCorners(newFile, function(finishFile) {
+                  self.emit('finish', finishFile, mime);
+              }); 
+          } else {
+              console.log('finis');
+              self.emit('finish', newFile, mime);
+          }
+      });
+  } else {
+      gm(filePath)
+          .resize(size.width, size.height)
+          .write(newFile, function(err) {
+              if(!err) {
+                  if (roundCorners) { 
+                      roundedCorners(newFile, function(finishFile) {
+                          self.emit('finish', finishFile, mime);
+                      }); 
+                  } else {
+                      self.emit('finish', newFile, mime);
+                  }
+              } else {
+                  self.emit('error', err);
+                  console.log(err);
+              }
+          });
+  }
 
   return this;
 }
 
 ImgProcessor.prototype.__proto__ = EventEmitter.prototype;
+
+thumbs = function(size, filePath, newFile, cb) {
+  var cmd = './thumbs.sh ' + size.width + ' ' + size.height + ' ' + filePath + ' ' + newFile;
+  console.log(cmd);
+
+  exec(cmd, function(error, stdout, stderr) {
+    console.log('after cmd');
+    console.log(error);
+    console.log(stderr);
+    cb(newFile);
+  });
+}
 
 roundedCorners = function(filePath, cb) {
   var newFile = temp.path();

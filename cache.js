@@ -9,13 +9,13 @@ exports.check = function(id, size, roundCorners) {
 }
 
 
-Box = function(id, size, roundCorners) {
+Box = function(id, size, thumb, roundCorners) {
   var self = this;
   var path = buildPath()
   check();
 
   function buildPath() {
-    return '/' + dbName + '/' + id + '_size' + size.height + 'x' + size.width + (roundCorners ? '_round' : '') + '/img';
+    return '/' + dbName + '/' + id + '_size' + size.height + 'x' + size.width + (roundCorners ? '_round' : '') + (thumb ? '_thumb' : '') + '/img';
   }
 
   function check() {

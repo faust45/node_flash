@@ -15,13 +15,14 @@ httpProxy.createServer(function (req, res, proxy) {
       id   = path.pathname.replace('/', ''),
       params = qs.parse(path.query),
       size   = parseSize(params.size) || {width: 100, height: 100},
-      roundCorners = params.round;
+      roundCorners = params.round,
+      thumb = params.thumb;
 
   if (id == 'favicon.ico' || id == '') {
     return;
   } 
 
-  var box = cache.check(id, size, roundCorners);
+  var box = cache.check(id, size, thumb, roundCorners);
 
   box.on('hit', function(cacheUrl) {
     req.url = cacheUrl;
@@ -30,7 +31,7 @@ httpProxy.createServer(function (req, res, proxy) {
 
   box.on('fail', function() {
     myCouch.downloadAttachment(id, {}, function(er, filePath) {
-      var processor = imgs.process(filePath, {size: size, round: roundCorners});
+      var processor = imgs.process(filePath, {size: size, round: roundCorners, thumb: thumb});
 
       processor.on('error', function(er) {
         res.end();
