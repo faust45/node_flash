@@ -1,5 +1,6 @@
 var couchdb = require('couchdb'),
     http = require('http'),
+    ID3 = require('musicmetadata'),
     fs = require('fs'),
     temp = require('temp'),
     dbName = 'rocks_file_store_dev',
@@ -17,7 +18,7 @@ exports.downloadAttachment = function(docID, options, cb) {
 
   getAttachmentName(docID, function(er, fileName) {
     if (!er) {
-      console.log('start download...');
+      console.log('start downloadAttachment...');
 
       var filePath = temp.path();
       var fileStream = fs.createWriteStream(filePath, {'encoding': 'binary'});
@@ -63,13 +64,39 @@ function getAttachmentName(docID, cb) {
   });
 }
 
+exports.getID3 = function(docID, fileName, cb) {
+    var path = '/' + dbName + '/' + docID + '/' + fileName;
+    var dbClient = http.createClient(5984, '192.168.1.100');
+    var request = dbClient.request('GET', path, {'Content-Range': 'bytes 0-499/1234'});
+    var len = 0;
+    
+    request.end();
+    request.on('response', function (response) {
+        var parser = new ID3(response);
+        parser.on('metadata', function(result) {
+            console.log('real result');
+            console.log(result);
+            cb && cb(null, result);
+        });
+
+        parser.parse();
+
+        response.on('data', function (chunk) {
+        });
+        response.on('end', function() {
+        });
+    });
+}
+
+
+
 exports.downloadBuffer = function(docID, options, cb) {
   options = options || {};
   options.limit = options.limit || 2000;
 
   getAttachmentName(docID, function(er, fileName) {
     if (!er) {
-      console.log('start download...');
+      console.log('start download Buffer...');
 
       var path = '/' + dbName + '/' + docID + '/' + fileName;
       var dbClient = http.createClient(5984, '192.168.1.100');
@@ -81,6 +108,7 @@ exports.downloadBuffer = function(docID, options, cb) {
         response.setEncoding('binary');
 
         response.on('data', function (chunk) {
+          console.log('data come...', len);
           len += buffer.write(chunk, len, 'binary');
 
           if (options.limit) {
