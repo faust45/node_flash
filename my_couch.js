@@ -64,10 +64,9 @@ function getAttachmentName(docID, cb) {
   });
 }
 
-exports.getID3 = function(docID, fileName, cb) {
-    var path = '/' + dbName + '/' + docID + '/' + fileName;
+exports.getID3 = function(path, docID, fileName, cb) {
     var dbClient = http.createClient(5984, '192.168.1.100');
-    var request = dbClient.request('GET', path, {'Content-Range': 'bytes 0-499/1234'});
+    var request  = dbClient.request('GET', path, {'Content-Range': 'bytes 0-499/1234'});
     var len = 0;
     
     request.end();
