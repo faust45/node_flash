@@ -3,8 +3,6 @@ var http = require('http'),
     url = require('url'),
     qs = require('querystring');
 
-var s = "Альбомы";
-console.log(s);
 http.createServer(function (req, res) {
   var path   = url.parse(req.url),
       params = qs.parse(path.query);
